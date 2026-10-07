@@ -8,7 +8,8 @@ Outputs:
                           for MVE, R&D/revenue and debt/equity
   dot_de_vs_mve.png     - debt/equity vs MVE scatter
   dot_de_vs_xrd.png     - debt/equity vs R&D/revenue scatter
-                          (both print Spearman/Pearson correlations)
+  dot_fcfni_vs_xrd.png  - FCF/net income vs R&D/revenue scatter
+                          (all dot plots print Spearman/Pearson correlations)
 """
 import sys
 from pathlib import Path
@@ -81,31 +82,32 @@ for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
 fig.tight_layout()
 fig.savefig(out / "lines_mve_xrd_de.png", dpi=150)
 
-# --- dot plots: debt/equity (y) vs MVE and vs R&D/revenue (x)
-def dot_plot(xcol, xlabel, xscale, xfmt, fname):
-    x = d[[xcol, "debt_equity"]].dropna()
+# --- dot plots: y variable vs an x variable
+def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname):
+    x = d[[xcol, ycol]].dropna()
     if xscale == "log":
         x = x[x[xcol] > 0]  # zeros can't be drawn on a log axis
-    spearman = x[xcol].rank().corr(x["debt_equity"].rank())
-    pearson = x[xcol].corr(x["debt_equity"])
+    spearman = x[xcol].rank().corr(x[ycol].rank())
+    pearson = x[xcol].corr(x[ycol])
     fig, ax = plt.subplots(figsize=(9, 7))
-    ax.scatter(x[xcol], x["debt_equity"], s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
+    ax.scatter(x[xcol], x[ycol], s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
     ax.set_xscale(xscale)
     ax.set_yscale("symlog", linthresh=1)
     if xfmt is not None:
         ax.xaxis.set_major_formatter(xfmt)
     ax.yaxis.set_major_formatter(fmt)
     ax.set_xlabel(xlabel)
-    ax.set_ylabel("Debt / equity (symlog)")
-    ax.set_title(f"Debt/equity vs {xlabel.split(' (')[0]}{TAG} "
+    ax.set_ylabel(f"{ylabel} (symlog)")
+    ax.set_title(f"{ylabel} vs {xlabel.split(' (')[0]}{TAG} "
                  f"(n={len(x)}; Spearman ρ={spearman:.2f})", loc="left")
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(alpha=0.2)
     fig.tight_layout()
     fig.savefig(out / fname, dpi=150)
     plt.close(fig)
-    print(f"debt/equity vs {xcol}: n={len(x)}  Spearman={spearman:.3f}  Pearson={pearson:.3f}")
+    print(f"{ycol} vs {xcol}: n={len(x)}  Spearman={spearman:.3f}  Pearson={pearson:.3f}")
 
 
-dot_plot("mve", "MVE ($, log)", "log", mfmt, "dot_de_vs_mve.png")
-dot_plot("xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
+dot_plot("debt_equity", "Debt / equity", "mve", "MVE ($, log)", "log", mfmt, "dot_de_vs_mve.png")
+dot_plot("debt_equity", "Debt / equity", "xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
+dot_plot("FCF_ni", "FCF / net income", "xrd_revt", "R&D / revenue", "linear", None, "dot_fcfni_vs_xrd.png")
