@@ -10,6 +10,7 @@ Outputs:
   dot_de_vs_xrd.png     - debt/equity vs R&D/revenue scatter
   dot_fcfni_vs_xrd.png  - FCF/net income vs R&D/revenue scatter
   dot_fcfni_vs_de.png   - FCF/net income vs debt/equity scatter
+  dot_mve_vs_age.png    - MVE vs company age (years) scatter
                           (all dot plots print Spearman/Pearson correlations)
 """
 import sys
@@ -41,6 +42,7 @@ if WINSORIZE:
         d[col] = d[col].clip(lo, hi)
         print(f"winsorized {col}: [{lo:.6g}, {hi:.6g}]  ({n_lo} raised, {n_hi} lowered)")
 
+d["age_years"] = d["age_days"] / 365.25
 d["mve"] = d["mve"] * 1e6  # source MVE is in $ millions; ratios are unitless
 
 
@@ -84,7 +86,7 @@ fig.tight_layout()
 fig.savefig(out / "lines_mve_xrd_de.png", dpi=150)
 
 # --- dot plots: y variable vs an x variable
-def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname):
+def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", yfmt=None):
     x = d[[xcol, ycol]].dropna()
     if xscale == "log":
         x = x[x[xcol] > 0]  # zeros can't be drawn on a log axis
@@ -93,11 +95,11 @@ def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname):
     fig, ax = plt.subplots(figsize=(9, 7))
     ax.scatter(x[xcol], x[ycol], s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
     ax.set_xscale(xscale, **({"linthresh": 1} if xscale == "symlog" else {}))
-    ax.set_yscale("symlog", linthresh=1)
+    ax.set_yscale(yscale, **({"linthresh": 1} if yscale == "symlog" else {}))
     ax.xaxis.set_major_formatter(xfmt if xfmt is not None else fmt)
-    ax.yaxis.set_major_formatter(fmt)
+    ax.yaxis.set_major_formatter(yfmt if yfmt is not None else fmt)
     ax.set_xlabel(xlabel)
-    ax.set_ylabel(f"{ylabel} (symlog)")
+    ax.set_ylabel(f"{ylabel} ({yscale})" if yscale != "linear" else ylabel)
     ax.set_title(f"{ylabel} vs {xlabel.split(' (')[0]}{TAG} "
                  f"(n={len(x)}; Spearman ρ={spearman:.2f})", loc="left")
     ax.spines[["top", "right"]].set_visible(False)
@@ -112,3 +114,4 @@ dot_plot("debt_equity", "Debt / equity", "mve", "MVE ($, log)", "log", mfmt, "do
 dot_plot("debt_equity", "Debt / equity", "xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
 dot_plot("FCF_ni", "FCF / net income", "xrd_revt", "R&D / revenue", "linear", None, "dot_fcfni_vs_xrd.png")
 dot_plot("FCF_ni", "FCF / net income", "debt_equity", "Debt / equity (symlog)", "symlog", None, "dot_fcfni_vs_de.png")
+dot_plot("mve", "MVE ($)", "age_years", "Company age (years)", "linear", None, "dot_mve_vs_age.png", yscale="log", yfmt=mfmt)
