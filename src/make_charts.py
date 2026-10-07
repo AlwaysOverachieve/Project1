@@ -6,12 +6,8 @@ Defaults: data/ValuesFSARatios.xlsx -> out/
 Outputs:
   lines_mve_xrd_de.png  - per-company lines (grey, low opacity) + median line
                           for MVE, R&D/revenue and debt/equity
-  dot_de_vs_mve.png     - debt/equity vs MVE scatter
-  dot_de_vs_xrd.png     - debt/equity vs R&D/revenue scatter
-  dot_fcfni_vs_xrd.png  - FCF/net income vs R&D/revenue scatter
-  dot_fcfni_vs_de.png   - FCF/net income vs debt/equity scatter
   dot_mve_vs_age.png    - MVE vs years since first 10-K (post-IPO age) scatter
-                          (all dot plots print Spearman/Pearson correlations)
+                          (prints Spearman/Pearson correlations)
 """
 import sys
 from pathlib import Path
@@ -85,7 +81,7 @@ for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
 fig.tight_layout()
 fig.savefig(out / "lines_mve_xrd_de.png", dpi=150)
 
-# --- dot plots: y variable vs an x variable
+# --- dot plot: MVE vs post-IPO age
 def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", yfmt=None):
     x = d[[xcol, ycol]].dropna()
     if xscale == "log":
@@ -110,8 +106,4 @@ def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", y
     print(f"{ycol} vs {xcol}: n={len(x)}  Spearman={spearman:.3f}  Pearson={pearson:.3f}")
 
 
-dot_plot("debt_equity", "Debt / equity", "mve", "MVE ($, log)", "log", mfmt, "dot_de_vs_mve.png")
-dot_plot("debt_equity", "Debt / equity", "xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
-dot_plot("FCF_ni", "FCF / net income", "xrd_revt", "R&D / revenue", "linear", None, "dot_fcfni_vs_xrd.png")
-dot_plot("FCF_ni", "FCF / net income", "debt_equity", "Debt / equity (symlog)", "symlog", None, "dot_fcfni_vs_de.png")
 dot_plot("mve", "MVE ($)", "age_years", "Years since first 10-K (post-IPO age)", "linear", None, "dot_mve_vs_age.png", yscale="log", yfmt=mfmt)
