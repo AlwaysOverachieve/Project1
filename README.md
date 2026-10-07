@@ -1,6 +1,6 @@
 # FSA ratio charts
 
-Line graphs (per-company grey lines + median) of MVE, R&D/revenue and debt/equity, and a dot plot of MVE vs post-IPO age.
+Line graphs (per-company grey lines + median) of MVE, R&D/revenue and debt/equity, and a dot plot of MVE vs post-IPO age with a LOESS trend and bootstrap 95% band.
 
 ## Reproduce
 

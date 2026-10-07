@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import FuncFormatter
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 ROOT = Path(__file__).resolve().parent.parent
 src = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "data" / "ValuesFSARatios.xlsx"
@@ -82,7 +83,7 @@ fig.tight_layout()
 fig.savefig(out / "lines_mve_xrd_de.png", dpi=150)
 
 # --- dot plot: MVE vs post-IPO age
-def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", yfmt=None):
+def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", yfmt=None, loess=False):
     x = d[[xcol, ycol]].dropna()
     if xscale == "log":
         x = x[x[xcol] > 0]  # zeros can't be drawn on a log axis
@@ -90,6 +91,21 @@ def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", y
     pearson = x[xcol].corr(x[ycol])
     fig, ax = plt.subplots(figsize=(9, 7))
     ax.scatter(x[xcol], x[ycol], s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
+    if loess:
+        # LOESS trend of log(y) on x with a 95% band from a company-level bootstrap
+        LOESS_FRAC, N_BOOT = 0.4, 300
+        grid = np.linspace(*x[xcol].quantile([0.01, 0.99]), 100)
+        fit = lambda df: np.interp(grid, *lowess(np.log(df[ycol]), df[xcol], frac=LOESS_FRAC).T)
+        rng = np.random.default_rng(0)
+        firms = d.loc[x.index, "tic"]
+        groups = {k: v for k, v in x.groupby(firms)}
+        boots = np.array([fit(pd.concat([groups[k] for k in rng.choice(list(groups), len(groups))]))
+                          for _ in range(N_BOOT)])
+        lo, hi = np.percentile(boots, [2.5, 97.5], axis=0)
+        ax.fill_between(grid, np.exp(lo), np.exp(hi), color="#D62728", alpha=0.18, lw=0,
+                        label="95% band (bootstrap by company)")
+        ax.plot(grid, np.exp(fit(x)), color="#D62728", lw=2.5, label=f"LOESS trend (span {LOESS_FRAC})")
+        ax.legend(loc="upper left")
     ax.set_xscale(xscale, **({"linthresh": 1} if xscale == "symlog" else {}))
     ax.set_yscale(yscale, **({"linthresh": 1} if yscale == "symlog" else {}))
     ax.xaxis.set_major_formatter(xfmt if xfmt is not None else fmt)
@@ -106,4 +122,4 @@ def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname, yscale="symlog", y
     print(f"{ycol} vs {xcol}: n={len(x)}  Spearman={spearman:.3f}  Pearson={pearson:.3f}")
 
 
-dot_plot("mve", "MVE ($)", "age_years", "Years since first 10-K (post-IPO age)", "linear", None, "dot_mve_vs_age.png", yscale="log", yfmt=mfmt)
+dot_plot("mve", "MVE ($)", "age_years", "Years since first 10-K (post-IPO age)", "linear", None, "dot_mve_vs_age.png", yscale="log", yfmt=mfmt, loess=True)
