@@ -10,7 +10,7 @@ Outputs:
   dot_de_vs_xrd.png     - debt/equity vs R&D/revenue scatter
   dot_fcfni_vs_xrd.png  - FCF/net income vs R&D/revenue scatter
   dot_fcfni_vs_de.png   - FCF/net income vs debt/equity scatter
-  dot_mve_vs_age.png    - MVE vs company age (years) scatter
+  dot_mve_vs_age.png    - MVE vs years since first 10-K (post-IPO age) scatter
                           (all dot plots print Spearman/Pearson correlations)
 """
 import sys
@@ -42,7 +42,7 @@ if WINSORIZE:
         d[col] = d[col].clip(lo, hi)
         print(f"winsorized {col}: [{lo:.6g}, {hi:.6g}]  ({n_lo} raised, {n_hi} lowered)")
 
-d["age_years"] = d["age_days"] / 365.25
+d["age_years"] = d["age_days"] / 365.25  # age_days = days since the firm's first filed 10-K
 d["mve"] = d["mve"] * 1e6  # source MVE is in $ millions; ratios are unitless
 
 
@@ -114,4 +114,4 @@ dot_plot("debt_equity", "Debt / equity", "mve", "MVE ($, log)", "log", mfmt, "do
 dot_plot("debt_equity", "Debt / equity", "xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
 dot_plot("FCF_ni", "FCF / net income", "xrd_revt", "R&D / revenue", "linear", None, "dot_fcfni_vs_xrd.png")
 dot_plot("FCF_ni", "FCF / net income", "debt_equity", "Debt / equity (symlog)", "symlog", None, "dot_fcfni_vs_de.png")
-dot_plot("mve", "MVE ($)", "age_years", "Company age (years)", "linear", None, "dot_mve_vs_age.png", yscale="log", yfmt=mfmt)
+dot_plot("mve", "MVE ($)", "age_years", "Years since first 10-K (post-IPO age)", "linear", None, "dot_mve_vs_age.png", yscale="log", yfmt=mfmt)
