@@ -11,7 +11,10 @@ const { applyTheme } = require("./apply_theme.js");
 
 const ROOT = path.resolve(__dirname, "..");
 const DECK = path.join(ROOT, "out", "deck");
-const OUT = path.join(ROOT, "out", "Biotech_MVE_vs_Age.pptx");
+const OUT = process.env.DECK_OUT || path.join(ROOT, "out", "Biotech_MVE_vs_Age.pptx");
+// footer shown at the bottom left of every slide (override with the DECK_FOOTER environment variable)
+const FOOTER = process.env.DECK_FOOTER || "Created with Claude - Reviewed by Jacob Willson";
+const REPO_URL = "https://github.com/AlwaysOverachieve/Project1";
 const S = JSON.parse(fs.readFileSync(path.join(DECK, "stats.json"), "utf8"));
 
 // ---------- theme: deep teal + orange accent (one dominant color, one sharp accent)
@@ -48,6 +51,7 @@ pres.defineSlideMaster({
   objects: [
     { placeholder: { options: { name: "title", type: "title", x: 0.8, y: 2.35, w: 8.4, h: 1.5, fontFace: "Cambria", fontSize: 44, bold: true, color: C.background1, align: "left", valign: "bottom", margin: 0 }, text: "" } },
     { placeholder: { options: { name: "subtitle", type: "body", x: 0.8, y: 4.05, w: 8.4, h: 1.3, fontSize: 20, color: C.background2, align: "left", valign: "top", margin: 0 }, text: "" } },
+    { text: { text: FOOTER, options: { x: 0.6, y: 7.05, w: 8, h: 0.3, fontSize: 10, color: C.background2, margin: 0, valign: "middle" } } },
   ],
 });
 pres.defineSlideMaster({
@@ -55,7 +59,7 @@ pres.defineSlideMaster({
   background: { color: C.background1 },
   objects: [
     { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.35, w: 12.13, h: 1.0, fontFace: "Cambria", fontSize: 30, bold: true, color: C.text2, align: "left", valign: "middle", margin: 0 }, text: "" } },
-    { text: { text: "Biotech Industry - MVE vs Age", options: { x: 0.6, y: 7.05, w: 6, h: 0.3, fontSize: 10, color: C.accent3, margin: 0, valign: "middle" } } },
+    { text: { text: FOOTER, options: { x: 0.6, y: 7.05, w: 8, h: 0.3, fontSize: 10, color: C.accent3, margin: 0, valign: "middle" } } },
   ],
   slideNumber: { x: 12.23, y: 7.05, w: 0.5, h: 0.3, fontSize: 10, color: C.accent3, align: "right" },
 });
@@ -240,7 +244,7 @@ function statCard(slide, x, y, w, h, big, label, name) {
   s.addText("Appendix A1: Source data and upstream filters", { placeholder: "title" });
   const stepW = 3.6, arrowW = 0.45, stepGap = (12.13 - 3 * stepW) / 2;
   const steps = [
-    { head: "Original source table", big: "100,000+", sub: "lines of data, all available columns", fill: C.background2, dark: false },
+    { head: "Original source table", big: "100,000+", sub: "lines of data, all available columns (CompustatData.xlsx)", fill: C.background2, dark: false },
     { head: "Filters applied before this analysis", lines: ["Removed rows with zero total debt", "Removed rows with blank capex", "Kept revenue ≥ $100M"], fill: C.text2, dark: true },
     { head: "Extract provided for this analysis", big: String(S.n), sub: `company-years (${S.firms} firms), simplified to the columns needed`, fill: C.background2, dark: false },
   ];
@@ -262,7 +266,13 @@ function statCard(slide, x, y, w, h, big, label, name) {
     "Blank capex removed: only firm-years that report capital expenditure remain, which may leave out some early-stage or sparse filers",
     "These filters were applied before the file reached this analysis, so their effect on the MVE–age correlation has not been measured here; Appendix A2 isolates only the revenue floor (ρ 0.11 → 0.29)",
     "To test them, rebuild the charts from the full table with and without each filter",
-  ]), { x: 0.6, y: 4.3, w: 12.13, h: 2.6, fontSize: 15, color: C.text1, valign: "top" });
+  ]), { x: 0.6, y: 4.3, w: 12.13, h: 1.95, fontSize: 15, color: C.text1, valign: "top" });
+  txt(s, [
+    { text: "Code, data extract and README: ", options: { bold: true, color: C.text2 } },
+    { text: REPO_URL, options: { color: C.accent1, underline: { style: "sng" }, hyperlink: { url: REPO_URL, tooltip: "Project repository on GitHub" } } },
+    { text: "   |   Full source table: ", options: { bold: true, color: C.text2 } },
+    { text: "CompustatData.xlsx (in the repository)" },
+  ], { x: 0.6, y: 6.4, w: 12.13, h: 0.5, fontSize: 14, color: C.text1, valign: "middle", objectName: "Repository link" });
   s.addNotes("The data used here is a simplified extract of a table with over 100,000 lines. Before extraction, rows with zero total debt and rows with blank capex were removed, and the $100M revenue floor was applied. We have not measured how the first two filters affect the result.");
 
   // A2
@@ -321,7 +331,7 @@ function statCard(slide, x, y, w, h, big, label, name) {
     "Trend line: LOESS of log(MVE) on age, span 0.4, drawn over the 1st–99th percentile of age",
     "95% band: 300 resamples of whole firms, refitting each time",
     "Axes: MVE log scale; R&D / revenue linear; debt / equity symmetric-log (it has negative values)",
-    "Reproduce: see the README in the repository (Python scripts for the charts and this deck)",
+    "Reproduce: Python and Node scripts, data extract and README at github.com/AlwaysOverachieve/Project1",
   ]), { x: 8.2, y: 1.9, w: 4.53, h: 4.9, fontSize: 14, color: C.text1, valign: "top" });
   s.addNotes("Summary statistics are for the final sample. The mean MVE is far above the median because of a few very large firms.");
 

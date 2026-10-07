@@ -36,7 +36,7 @@ Optional arguments: `python src/make_charts.py <input.xlsx> <output_dir>`. All l
 
 - 833 company-years, 201 companies (`tic`), fiscal years 2010–2024. Companies have between 1 and 15 years each (median 3).
 - Revenue is at least $100M in every row (this floor was applied in your file, not in the code).
-- The file is a simplified extract of a much larger source table (100,000+ lines). Before it was provided, rows with zero total debt and rows with blank capex were removed. Neither filter is applied or reproducible in this repository; they are described in Appendix A1 of the deck.
+- The file is a simplified extract of a much larger source table (100,000+ lines). Before it was provided, rows with zero total debt and rows with blank capex were removed. The full source table is `CompustatData.xlsx` (too large to upload with the code, so it is added to the GitHub repository manually). Neither filter is applied or reproducible by the code here; they are described in Appendix A1 of the deck.
 - No missing values and no duplicate company-year rows.
 - Columns used by the charts:
 
