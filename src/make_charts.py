@@ -50,7 +50,7 @@ fmt = FuncFormatter(lambda v, _: f"{v:,.0f}" if abs(v) >= 1 or v == 0 else f"{v:
 # (column, label, axis scale, symlog linthresh)
 METRICS = [
     ("mve", "Market value of equity (MVE, $)", "log", None),
-    ("xrd_revt", "R&D / revenue", "symlog", 1),
+    ("xrd_revt", "R&D / revenue", "linear", None),
     ("debt_equity", "Debt / equity", "symlog", 1),
 ]
 
@@ -65,7 +65,8 @@ for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
     med = d.groupby("fyear")[c].median()  # median over all companies
     ax.plot(med.index, med.values, color="#D62728", lw=3, label="Median (all companies)")
     ax.set_yscale(scale, **({"linthresh": linthresh} if linthresh else {}))
-    ax.yaxis.set_major_formatter(mfmt if c == "mve" else fmt)
+    if scale != "linear":
+        ax.yaxis.set_major_formatter(mfmt if c == "mve" else fmt)
     ax.set_title(f"{label} by company ({scale} scale, winsorized 1%/99%)", loc="left")
     ax.set_xlabel("Fiscal year")
     ax.set_ylabel(label)
@@ -85,12 +86,10 @@ pearson_log = np.log(xp.mve).corr(xp.xrd_revt)
 fig, ax = plt.subplots(figsize=(9, 7))
 ax.scatter(xp.mve, xp.xrd_revt, s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
 ax.set_xscale("log")
-ax.set_yscale("symlog", linthresh=1)
 ax.set_ylim(bottom=0)  # winsorized R&D/revenue is all positive
 ax.xaxis.set_major_formatter(mfmt)
-ax.yaxis.set_major_formatter(fmt)
 ax.set_xlabel("MVE ($, log)")
-ax.set_ylabel("R&D / revenue (symlog)")
+ax.set_ylabel("R&D / revenue")
 ax.set_title(f"MVE vs R&D/revenue, winsorized 1%/99% (n={len(xp)} company-years; Spearman ρ={spearman:.2f})", loc="left")
 ax.spines[["top", "right"]].set_visible(False)
 ax.grid(alpha=0.2)
