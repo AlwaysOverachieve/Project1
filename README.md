@@ -1,6 +1,6 @@
 # FSA ratio charts
 
-Line graphs (per-company grey lines + median) of MVE, R&D/revenue and debt/equity, and dot plots of debt/equity vs MVE, debt/equity vs R&D/revenue, and FCF/net income vs R&D/revenue.
+Line graphs (per-company grey lines + median) of MVE, R&D/revenue and debt/equity, and dot plots of debt/equity vs MVE, debt/equity vs R&D/revenue, FCF/net income vs R&D/revenue, and FCF/net income vs debt/equity.
 
 ## Reproduce
 

@@ -9,6 +9,7 @@ Outputs:
   dot_de_vs_mve.png     - debt/equity vs MVE scatter
   dot_de_vs_xrd.png     - debt/equity vs R&D/revenue scatter
   dot_fcfni_vs_xrd.png  - FCF/net income vs R&D/revenue scatter
+  dot_fcfni_vs_de.png   - FCF/net income vs debt/equity scatter
                           (all dot plots print Spearman/Pearson correlations)
 """
 import sys
@@ -91,10 +92,9 @@ def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname):
     pearson = x[xcol].corr(x[ycol])
     fig, ax = plt.subplots(figsize=(9, 7))
     ax.scatter(x[xcol], x[ycol], s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
-    ax.set_xscale(xscale)
+    ax.set_xscale(xscale, **({"linthresh": 1} if xscale == "symlog" else {}))
     ax.set_yscale("symlog", linthresh=1)
-    if xfmt is not None:
-        ax.xaxis.set_major_formatter(xfmt)
+    ax.xaxis.set_major_formatter(xfmt if xfmt is not None else fmt)
     ax.yaxis.set_major_formatter(fmt)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(f"{ylabel} (symlog)")
@@ -111,3 +111,4 @@ def dot_plot(ycol, ylabel, xcol, xlabel, xscale, xfmt, fname):
 dot_plot("debt_equity", "Debt / equity", "mve", "MVE ($, log)", "log", mfmt, "dot_de_vs_mve.png")
 dot_plot("debt_equity", "Debt / equity", "xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
 dot_plot("FCF_ni", "FCF / net income", "xrd_revt", "R&D / revenue", "linear", None, "dot_fcfni_vs_xrd.png")
+dot_plot("FCF_ni", "FCF / net income", "debt_equity", "Debt / equity (symlog)", "symlog", None, "dot_fcfni_vs_de.png")
