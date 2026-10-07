@@ -268,7 +268,7 @@ function statCard(slide, x, y, w, h, big, label, name) {
     "To test them, rebuild the charts from the full table with and without each filter",
   ]), { x: 0.6, y: 4.3, w: 12.13, h: 1.95, fontSize: 15, color: C.text1, valign: "top" });
   txt(s, [
-    { text: "Code, data extract and README: ", options: { bold: true, color: C.text2 } },
+    { text: "Code and data: ", options: { bold: true, color: C.text2 } },
     { text: REPO_URL, options: { color: C.accent1, underline: { style: "sng" }, hyperlink: { url: REPO_URL, tooltip: "Project repository on GitHub" } } },
     { text: "   |   Original source file: ", options: { bold: true, color: C.text2 } },
     { text: "too large to host; message Jacob Willson for a copy" },
