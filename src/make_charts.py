@@ -24,6 +24,16 @@ out = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "out"
 out.mkdir(parents=True, exist_ok=True)
 
 d = pd.read_excel(src)
+
+# Winsorize MVE, R&D/revenue and debt/equity at the 1st/99th percentile
+# (pooled over all company-years); values beyond the cutoffs are set to the cutoffs.
+LOWER, UPPER = 0.01, 0.99
+for col in ("mve", "xrd_revt", "debt_equity"):
+    lo, hi = d[col].quantile([LOWER, UPPER])
+    n_lo, n_hi = (d[col] < lo).sum(), (d[col] > hi).sum()
+    d[col] = d[col].clip(lo, hi)
+    print(f"winsorized {col}: [{lo:.6g}, {hi:.6g}]  ({n_lo} raised, {n_hi} lowered)")
+
 d["mve"] = d["mve"] * 1e6  # source MVE is in $ millions; ratios are unitless
 
 
@@ -44,7 +54,7 @@ METRICS = [
     ("debt_equity", "Debt / equity", "symlog", 1),
 ]
 
-# --- line graphs: no data dropped; log/symlog scales handle extreme outliers
+# --- line graphs (winsorized data; log/symlog scales still handle the wide spread)
 fig, axs = plt.subplots(3, 1, figsize=(11, 13))
 for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
     for _, g in d.groupby("tic"):
@@ -56,7 +66,7 @@ for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
     ax.plot(med.index, med.values, color="#D62728", lw=3, label="Median (all companies)")
     ax.set_yscale(scale, **({"linthresh": linthresh} if linthresh else {}))
     ax.yaxis.set_major_formatter(mfmt if c == "mve" else fmt)
-    ax.set_title(f"{label} by company ({scale} scale)", loc="left")
+    ax.set_title(f"{label} by company ({scale} scale, winsorized 1%/99%)", loc="left")
     ax.set_xlabel("Fiscal year")
     ax.set_ylabel(label)
     ax.legend(loc="upper left")
@@ -76,11 +86,12 @@ fig, ax = plt.subplots(figsize=(9, 7))
 ax.scatter(xp.mve, xp.xrd_revt, s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
 ax.set_xscale("log")
 ax.set_yscale("symlog", linthresh=1)
+ax.set_ylim(bottom=0)  # winsorized R&D/revenue is all positive
 ax.xaxis.set_major_formatter(mfmt)
 ax.yaxis.set_major_formatter(fmt)
 ax.set_xlabel("MVE ($, log)")
 ax.set_ylabel("R&D / revenue (symlog)")
-ax.set_title(f"MVE vs R&D/revenue (n={len(xp)} company-years; Spearman ρ={spearman:.2f})", loc="left")
+ax.set_title(f"MVE vs R&D/revenue, winsorized 1%/99% (n={len(xp)} company-years; Spearman ρ={spearman:.2f})", loc="left")
 ax.spines[["top", "right"]].set_visible(False)
 ax.grid(alpha=0.2)
 fig.tight_layout()

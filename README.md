@@ -14,5 +14,5 @@ Optional arguments: `python src/make_charts.py <input.xlsx> <output_dir>`.
 ## Notes
 
 - `data/ValuesFSARatios.xlsx` is the input. Its figures are in $ millions; MVE is converted to dollars for display. The R&D/revenue and debt/equity ratios are unitless and plotted as-is.
-- No outliers are removed. Log (MVE) and symmetric-log (ratios) axes handle extreme values. Median is over all companies each year.
+- MVE, R&D/revenue and debt/equity are winsorized at the pooled 1st/99th percentile (values beyond the cutoffs are set to the cutoffs; no rows dropped). Cutoffs are printed when the script runs. The median and correlations use the winsorized data. Log (MVE) and symmetric-log (ratios) axes are kept for the wide spread.
 - Dot plot omits 3 rows with MVE = 0 (can't be drawn on a log axis). Correlations are printed to the console.
