@@ -27,14 +27,17 @@ out.mkdir(parents=True, exist_ok=True)
 
 d = pd.read_excel(src)
 
-# Winsorize MVE, R&D/revenue and debt/equity at the 1st/99th percentile
-# (pooled over all company-years); values beyond the cutoffs are set to the cutoffs.
+# Optional winsorizing of MVE, R&D/revenue and debt/equity at the pooled 1st/99th
+# percentile (values beyond the cutoffs are set to the cutoffs). Off by default.
+WINSORIZE = False
 LOWER, UPPER = 0.01, 0.99
-for col in ("mve", "xrd_revt", "debt_equity"):
-    lo, hi = d[col].quantile([LOWER, UPPER])
-    n_lo, n_hi = (d[col] < lo).sum(), (d[col] > hi).sum()
-    d[col] = d[col].clip(lo, hi)
-    print(f"winsorized {col}: [{lo:.6g}, {hi:.6g}]  ({n_lo} raised, {n_hi} lowered)")
+TAG = ", winsorized 1%/99%" if WINSORIZE else ""
+if WINSORIZE:
+    for col in ("mve", "xrd_revt", "debt_equity"):
+        lo, hi = d[col].quantile([LOWER, UPPER])
+        n_lo, n_hi = (d[col] < lo).sum(), (d[col] > hi).sum()
+        d[col] = d[col].clip(lo, hi)
+        print(f"winsorized {col}: [{lo:.6g}, {hi:.6g}]  ({n_lo} raised, {n_hi} lowered)")
 
 d["mve"] = d["mve"] * 1e6  # source MVE is in $ millions; ratios are unitless
 
@@ -56,7 +59,7 @@ METRICS = [
     ("debt_equity", "Debt / equity", "symlog", 1),
 ]
 
-# --- line graphs (winsorized data; log/symlog scales still handle the wide spread)
+# --- line graphs (log/symlog scales handle the wide spread)
 fig, axs = plt.subplots(3, 1, figsize=(11, 13))
 for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
     for _, g in d.groupby("tic"):
@@ -69,7 +72,7 @@ for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
     ax.set_yscale(scale, **({"linthresh": linthresh} if linthresh else {}))
     if scale != "linear":
         ax.yaxis.set_major_formatter(mfmt if c == "mve" else fmt)
-    ax.set_title(f"{label} by company ({scale} scale, winsorized 1%/99%)", loc="left")
+    ax.set_title(f"{label} by company ({scale} scale{TAG})", loc="left")
     ax.set_xlabel("Fiscal year")
     ax.set_ylabel(label)
     ax.legend(loc="upper left")
@@ -94,7 +97,7 @@ def dot_plot(xcol, xlabel, xscale, xfmt, fname):
     ax.yaxis.set_major_formatter(fmt)
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Debt / equity (symlog)")
-    ax.set_title(f"Debt/equity vs {xlabel.split(' (')[0]}, winsorized 1%/99% "
+    ax.set_title(f"Debt/equity vs {xlabel.split(' (')[0]}{TAG} "
                  f"(n={len(x)}; Spearman ρ={spearman:.2f})", loc="left")
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(alpha=0.2)
