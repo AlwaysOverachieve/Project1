@@ -6,7 +6,9 @@ Defaults: data/ValuesFSARatios.xlsx -> out/
 Outputs:
   lines_mve_xrd_de.png  - per-company lines (grey, low opacity) + median line
                           for MVE, R&D/revenue and debt/equity
-  dot_mve_vs_xrd.png    - MVE vs R&D/revenue scatter; prints correlations
+  dot_de_vs_mve.png     - debt/equity vs MVE scatter
+  dot_de_vs_xrd.png     - debt/equity vs R&D/revenue scatter
+                          (both print Spearman/Pearson correlations)
 """
 import sys
 from pathlib import Path
@@ -76,27 +78,31 @@ for ax, (c, label, scale, linthresh) in zip(axs, METRICS):
 fig.tight_layout()
 fig.savefig(out / "lines_mve_xrd_de.png", dpi=150)
 
-# --- dot plot: MVE vs R&D/revenue
-x = d[["mve", "xrd_revt"]].dropna()
-xp = x[x.mve > 0]
-spearman = x.mve.rank().corr(x.xrd_revt.rank())
-pearson_raw = x.mve.corr(x.xrd_revt)
-pearson_log = np.log(xp.mve).corr(xp.xrd_revt)
+# --- dot plots: debt/equity (y) vs MVE and vs R&D/revenue (x)
+def dot_plot(xcol, xlabel, xscale, xfmt, fname):
+    x = d[[xcol, "debt_equity"]].dropna()
+    if xscale == "log":
+        x = x[x[xcol] > 0]  # zeros can't be drawn on a log axis
+    spearman = x[xcol].rank().corr(x["debt_equity"].rank())
+    pearson = x[xcol].corr(x["debt_equity"])
+    fig, ax = plt.subplots(figsize=(9, 7))
+    ax.scatter(x[xcol], x["debt_equity"], s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
+    ax.set_xscale(xscale)
+    ax.set_yscale("symlog", linthresh=1)
+    if xfmt is not None:
+        ax.xaxis.set_major_formatter(xfmt)
+    ax.yaxis.set_major_formatter(fmt)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Debt / equity (symlog)")
+    ax.set_title(f"Debt/equity vs {xlabel.split(' (')[0]}, winsorized 1%/99% "
+                 f"(n={len(x)}; Spearman ρ={spearman:.2f})", loc="left")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(alpha=0.2)
+    fig.tight_layout()
+    fig.savefig(out / fname, dpi=150)
+    plt.close(fig)
+    print(f"debt/equity vs {xcol}: n={len(x)}  Spearman={spearman:.3f}  Pearson={pearson:.3f}")
 
-fig, ax = plt.subplots(figsize=(9, 7))
-ax.scatter(xp.mve, xp.xrd_revt, s=10, color="#4C78A8", alpha=0.35, edgecolors="none")
-ax.set_xscale("log")
-ax.set_ylim(bottom=0)  # winsorized R&D/revenue is all positive
-ax.xaxis.set_major_formatter(mfmt)
-ax.set_xlabel("MVE ($, log)")
-ax.set_ylabel("R&D / revenue")
-ax.set_title(f"MVE vs R&D/revenue, winsorized 1%/99% (n={len(xp)} company-years; Spearman ρ={spearman:.2f})", loc="left")
-ax.spines[["top", "right"]].set_visible(False)
-ax.grid(alpha=0.2)
-fig.tight_layout()
-fig.savefig(out / "dot_mve_vs_xrd.png", dpi=150)
 
-print(f"rows with MVE and R&D/revenue: {len(x)} ({(x.mve <= 0).sum()} with MVE = 0 omitted from dot plot)")
-print(f"Spearman (rank):            {spearman:.3f}")
-print(f"Pearson (raw):              {pearson_raw:.3f}")
-print(f"Pearson (log MVE vs ratio): {pearson_log:.3f}")
+dot_plot("mve", "MVE ($, log)", "log", mfmt, "dot_de_vs_mve.png")
+dot_plot("xrd_revt", "R&D / revenue", "linear", None, "dot_de_vs_xrd.png")
