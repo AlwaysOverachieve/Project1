@@ -244,7 +244,7 @@ function statCard(slide, x, y, w, h, big, label, name) {
   s.addText("Appendix A1: Source data and upstream filters", { placeholder: "title" });
   const stepW = 3.6, arrowW = 0.45, stepGap = (12.13 - 3 * stepW) / 2;
   const steps = [
-    { head: "Original source table", big: "100,000+", sub: "lines of data, all available columns (CompustatData.xlsx)", fill: C.background2, dark: false },
+    { head: "Original source table", big: "100,000+", sub: "lines of data, all available columns", fill: C.background2, dark: false },
     { head: "Filters applied before this analysis", lines: ["Removed rows with zero total debt", "Removed rows with blank capex", "Kept revenue ≥ $100M"], fill: C.text2, dark: true },
     { head: "Extract provided for this analysis", big: String(S.n), sub: `company-years (${S.firms} firms), simplified to the columns needed`, fill: C.background2, dark: false },
   ];
@@ -270,8 +270,8 @@ function statCard(slide, x, y, w, h, big, label, name) {
   txt(s, [
     { text: "Code, data extract and README: ", options: { bold: true, color: C.text2 } },
     { text: REPO_URL, options: { color: C.accent1, underline: { style: "sng" }, hyperlink: { url: REPO_URL, tooltip: "Project repository on GitHub" } } },
-    { text: "   |   Full source table: ", options: { bold: true, color: C.text2 } },
-    { text: "CompustatData.xlsx (in the repository)" },
+    { text: "   |   Original source file: ", options: { bold: true, color: C.text2 } },
+    { text: "too large to host; message Jacob Willson for a copy" },
   ], { x: 0.6, y: 6.4, w: 12.13, h: 0.5, fontSize: 14, color: C.text1, valign: "middle", objectName: "Repository link" });
   s.addNotes("The data used here is a simplified extract of a table with over 100,000 lines. Before extraction, rows with zero total debt and rows with blank capex were removed, and the $100M revenue floor was applied. We have not measured how the first two filters affect the result.");
 
