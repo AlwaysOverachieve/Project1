@@ -1,0 +1,7 @@
+{
+  "name": "fsa-ratio-charts",
+  "private": true,
+  "description": "Builds the Biotech MVE vs Age presentation (out/Biotech_MVE_vs_Age.pptx)",
+  "scripts": { "deck": "python3 src/make_deck_charts.py && node src/make_deck.js" },
+  "dependencies": { "pptxgenjs": "^3.12.0", "react": "^18.3.1", "react-dom": "^18.3.1", "react-icons": "^5.3.0", "sharp": "^0.33.5" }
+}

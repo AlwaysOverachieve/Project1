@@ -7,7 +7,21 @@ This repository turns `data/ValuesFSARatios.xlsx` into two charts:
 | `out/lines_mve_xrd_de.png` | Three stacked line graphs (MVE, R&D/revenue, debt/equity) by fiscal year. Each company is a thin grey line; the median across companies is a solid red line. |
 | `out/dot_mve_vs_age.png` | A dot plot of MVE against years since the firm's first 10-K (post-IPO age), with a LOESS trend line and a 95% bootstrap band. |
 
-## Reproduce
+## Presentation
+
+`out/Biotech_MVE_vs_Age.pptx` (6 main slides + 3 appendix slides) is built from the same data:
+
+```
+pip install -r requirements.txt
+npm install                           # pptxgenjs, react-icons, sharp
+npm run deck                          # = python3 src/make_deck_charts.py && node src/make_deck.js
+```
+
+- `src/make_deck_charts.py` makes the annotated chart images in `out/deck/` and `out/deck/stats.json`. Every number in the slides (correlations, medians by age band, robustness checks) is computed there from `data/ValuesFSARatios.xlsx`. It applies the same transformations as `make_charts.py`, with no winsorizing or outlier removal.
+- `data/prior_no_revenue_floor.xlsx` is the earlier version of the data without the $100M revenue floor (3,448 company-years). It is used only for the appendix comparison of the revenue floor's effect.
+- `src/make_deck.js` lays out the slides. `src/apply_theme.js` writes the theme colors into the file.
+
+## Reproduce the two charts
 
 ```
 pip install -r requirements.txt
