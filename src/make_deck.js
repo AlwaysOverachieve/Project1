@@ -149,12 +149,12 @@ function statCard(slide, x, y, w, h, big, label, name) {
   ]), { x: 0.6, y: 3.45, w: 5.9, h: 3.45, fontSize: 16, color: C.text1, valign: "top" });
   txt(s, "Cleaning steps", { x: 6.83, y: 3.05, w: 5.9, h: 0.35, fontSize: 16, bold: true, color: C.text2 });
   txt(s, bullets([
-    "Revenue floor: only firm-years with revenue ≥ $100M (applied in the source file) so ratios are not distorted by tiny denominators",
-    "Missing data: none in the columns used; no imputation and no rows dropped",
-    "Outliers: none removed and no winsorizing; 1% / 99% and 5% / 95% tests left the results unchanged (Appendix A1). Log axes handle the skew",
+    "Revenue floor: only firm-years with revenue ≥ $100M (applied upstream) so ratios are not distorted by tiny denominators",
+    "Missing data: none in the columns used; no imputation, and this analysis dropped no rows. Upstream filters on the full source table: Appendix A1",
+    "Outliers: none removed and no winsorizing; 1% / 99% and 5% / 95% tests left the results unchanged (Appendix A2). Log axes handle the skew",
     "Units: MVE converted from $ millions to $; age from days to years",
   ]), { x: 6.83, y: 3.45, w: 5.9, h: 3.45, fontSize: 16, color: C.text1, valign: "top" });
-  s.addNotes("Final sample is 833 company-years for 201 firms. The $100M revenue floor was applied in the data file and matters a lot: without it the correlation is much weaker (Appendix A1). We deliberately did not winsorize; the appendix shows why.");
+  s.addNotes("Final sample is 833 company-years for 201 firms. The $100M revenue floor was applied in the data file and matters a lot: without it the correlation is much weaker (Appendix A2). We deliberately did not winsorize; the appendix shows why.");
 
   // ================= Slide 4: key visuals
   s = pres.addSlide({ masterName: "CONTENT_LAYOUT", sectionTitle: "Main" });
@@ -235,9 +235,39 @@ function statCard(slide, x, y, w, h, big, label, name) {
   const HDR = { bold: true, color: C.background1, fill: { color: C.text2 }, fontSize: 13, valign: "middle" };
   const cell = (t, o = {}) => ({ text: String(t), options: { fontSize: 13, color: C.text1, valign: "middle", ...o } });
 
-  // A1
+  // A1: source data and upstream filters
   s = pres.addSlide({ masterName: "CONTENT_LAYOUT", sectionTitle: "Appendix" });
-  s.addText("Appendix A1: Data cleaning choices and their effects", { placeholder: "title" });
+  s.addText("Appendix A1: Source data and upstream filters", { placeholder: "title" });
+  const stepW = 3.6, arrowW = 0.45, stepGap = (12.13 - 3 * stepW) / 2;
+  const steps = [
+    { head: "Original source table", big: "100,000+", sub: "lines of data, all available columns", fill: C.background2, dark: false },
+    { head: "Filters applied before this analysis", lines: ["Removed rows with zero total debt", "Removed rows with blank capex", "Kept revenue ≥ $100M"], fill: C.text2, dark: true },
+    { head: "Extract provided for this analysis", big: String(S.n), sub: `company-years (${S.firms} firms), simplified to the columns needed`, fill: C.background2, dark: false },
+  ];
+  steps.forEach((st, i) => {
+    const x = 0.6 + i * (stepW + stepGap);
+    card(s, x, 1.5, stepW, 2.1, `Step card ${i + 1}`, st.fill);
+    txt(s, st.head, { x: x + 0.2, y: 1.62, w: stepW - 0.4, h: 0.4, fontSize: 14, bold: true, color: st.dark ? C.accent4 : C.accent1, valign: "top", objectName: `Step ${i + 1} heading` });
+    if (st.big) {
+      txt(s, st.big, { x: x + 0.2, y: 2.05, w: stepW - 0.4, h: 0.7, fontFace: "Cambria", fontSize: 36, bold: true, color: C.text2, valign: "middle", objectName: `Step ${i + 1} value` });
+      txt(s, st.sub, { x: x + 0.2, y: 2.8, w: stepW - 0.4, h: 0.7, fontSize: 14, color: C.text1, valign: "top", objectName: `Step ${i + 1} label` });
+    } else {
+      txt(s, bullets(st.lines, { color: C.background1 }), { x: x + 0.2, y: 2.1, w: stepW - 0.4, h: 1.4, fontSize: 15, color: C.background1, valign: "top", objectName: `Step ${i + 1} filters` });
+    }
+    if (i < 2) s.addShape(pres.ShapeType.rightArrow, { x: x + stepW + (stepGap - arrowW) / 2, y: 2.3, w: arrowW, h: 0.5, fill: { color: C.accent2 }, line: { color: C.accent2, width: 0 }, objectName: `Step arrow ${i + 1}` });
+  });
+  txt(s, "Why it matters", { x: 0.6, y: 3.9, w: 12.13, h: 0.35, fontSize: 16, bold: true, color: C.text2 });
+  txt(s, bullets([
+    "Zero total debt removed: debt-free firm-years are excluded, which may tilt the sample toward firms that carry debt",
+    "Blank capex removed: only firm-years that report capital expenditure remain, which may leave out some early-stage or sparse filers",
+    "These filters were applied before the file reached this analysis, so their effect on the MVE–age correlation has not been measured here; Appendix A2 isolates only the revenue floor (ρ 0.11 → 0.29)",
+    "To test them, rebuild the charts from the full table with and without each filter",
+  ]), { x: 0.6, y: 4.3, w: 12.13, h: 2.6, fontSize: 15, color: C.text1, valign: "top" });
+  s.addNotes("The data used here is a simplified extract of a table with over 100,000 lines. Before extraction, rows with zero total debt and rows with blank capex were removed, and the $100M revenue floor was applied. We have not measured how the first two filters affect the result.");
+
+  // A2
+  s = pres.addSlide({ masterName: "CONTENT_LAYOUT", sectionTitle: "Appendix" });
+  s.addText("Appendix A2: Data cleaning choices and their effects", { placeholder: "title" });
   const r2 = (v) => (v == null ? "–" : v.toFixed(2));
   const rowsA1 = [[
     { text: "Version", options: { ...HDR, align: "left" } }, { text: "n", options: { ...HDR, align: "right" } }, { text: "Spearman ρ", options: { ...HDR, align: "right" } },
@@ -255,13 +285,13 @@ function statCard(slide, x, y, w, h, big, label, name) {
     "Winsorizing pulls extreme values to the cutoff. It lifts raw Pearson r (0.29 → 0.33–0.35) because a few giant firms stop dominating, but leaves rank correlation and the fitted slope unchanged, so no hidden stronger relationship",
     "Bias from winsorizing: it shrinks the tails toward the middle and understates true dispersion. Rank statistics and log axes handle outliers without changing values, so the final analysis uses unmodified data",
     "The $100M revenue floor is the biggest data choice: it removes small and pre-revenue firms and raises ρ from 0.11 to 0.29. Results describe commercial-stage biotechs",
-    "No firms were dropped for missing data (no missing values in the columns used)",
+    "No firms were dropped for missing data in this analysis (no missing values in the columns used); upstream filters are in Appendix A1",
   ]), { x: 0.6, y: 4.7, w: 12.13, h: 2.25, fontSize: 14, color: C.text1, valign: "top" });
   s.addNotes("Why winsorizing was not used: it changes Pearson but not the rank-based result or the slope.");
 
   // A2
   s = pres.addSlide({ masterName: "CONTENT_LAYOUT", sectionTitle: "Appendix" });
-  s.addText("Appendix A2: Robustness checks", { placeholder: "title" });
+  s.addText("Appendix A3: Robustness checks", { placeholder: "title" });
   const rowsA2 = [[
     { text: "Cut of the data", options: { ...HDR, align: "left" } }, { text: "n", options: { ...HDR, align: "right" } }, { text: "Correlation of MVE with age", options: { ...HDR, align: "right" } },
   ]];
@@ -279,7 +309,7 @@ function statCard(slide, x, y, w, h, big, label, name) {
 
   // A3
   s = pres.addSlide({ masterName: "CONTENT_LAYOUT", sectionTitle: "Appendix" });
-  s.addText("Appendix A3: Summary statistics and methods", { placeholder: "title" });
+  s.addText("Appendix A4: Summary statistics and methods", { placeholder: "title" });
   const sm = S.summary, num = (v, d = 0) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   const rowsA3 = [["Variable", "Min", "Median", "Mean", "Max"].map((t, i) => ({ text: t, options: { ...HDR, align: i ? "right" : "left" } }))];
   [["MVE ($ millions)", sm.mve, 0], ["Age (years since first 10-K)", sm.age, 1], ["Revenue ($ millions)", sm.revt, 0]].forEach(([n, v, d]) =>

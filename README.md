@@ -36,6 +36,7 @@ Optional arguments: `python src/make_charts.py <input.xlsx> <output_dir>`. All l
 
 - 833 company-years, 201 companies (`tic`), fiscal years 2010–2024. Companies have between 1 and 15 years each (median 3).
 - Revenue is at least $100M in every row (this floor was applied in your file, not in the code).
+- The file is a simplified extract of a much larger source table (100,000+ lines). Before it was provided, rows with zero total debt and rows with blank capex were removed. Neither filter is applied or reproducible in this repository; they are described in Appendix A1 of the deck.
 - No missing values and no duplicate company-year rows.
 - Columns used by the charts:
 
@@ -62,7 +63,7 @@ The ratios (`xrd_revt`, `debt_equity`) are unitless, so the millions cancel and 
 **What is not done:**
 
 - **No winsorizing and no outlier removal.** All 833 rows are plotted. I tested winsorizing at the 1st/99th percentile while developing the charts. It raised the raw Pearson correlation of MVE and age from about 0.29 to about 0.34, but left the rank correlation (0.29), the log-scale R² (about 0.11) and the fitted slope unchanged. It did not reveal a stronger relationship, so the final charts use the unmodified values.
-- **No rows dropped.** The dot plot uses n = 833. MVE is above zero in every row, so the log-scale plot excludes nothing.
+- **No rows dropped by the code here.** The dot plot uses n = 833. MVE is above zero in every row, so the log-scale plot excludes nothing.
 - **No imputation or smoothing of the data itself.** The LOESS curve is an overlay that is drawn on top of the unchanged points.
 
 ## How each chart is built
